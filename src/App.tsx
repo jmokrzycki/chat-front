@@ -27,7 +27,7 @@ function App() {
     const userMessage: Message = { text: prompt, sender: 'user' };
     const emptyBotMessage: Message = { text: '', sender: 'bot' };
 
-    setMessages((prev) => [...prev, userMessage, emptyBotMessage]);
+    setMessages((prev) =>[...prev, userMessage, emptyBotMessage]);
     setPrompt('');
     setIsLoading(true);
 
@@ -68,7 +68,10 @@ function App() {
           if (line.trim() !== '') {
             try {
               const parsed = JSON.parse(line);
-              newTextChunk += parsed.response;
+
+              if (parsed.response) {
+                newTextChunk += parsed.response;
+              }
             } catch (err) {
               console.error("Błąd parsowania:", err);
             }
