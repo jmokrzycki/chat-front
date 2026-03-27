@@ -3,14 +3,17 @@ import './App.css';
 
 interface Message {
   text: string;
-  sender: 'user' | 'bot';
+  sender: 'user' | 'assistant';
 }
 
 function App() {
   const [prompt, setPrompt] = useState('');
-
   const [messages, setMessages] = useState<Message[]>([]);
-  const[isLoading, setIsLoading] = useState(false);
+  const [isLoading, setIsLoading] = useState(false);
+
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+  const [isUploading, setIsUploading] = useState(false);
+  const [uploadStatus, setUploadStatus] = useState<string>('');
 
   const chatBoxRef = useRef<HTMLDivElement>(null);
 
@@ -20,14 +23,53 @@ function App() {
     }
   }, [messages]);
 
+  const handleFileChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setSelectedFile(e.target.files[0]);
+      setUploadStatus('');
+    }
+  };
+
+  const handleFileUpload = async () => {
+    if (!selectedFile) return;
+
+    setIsUploading(true);
+    setUploadStatus('Przetwarzanie pliku...');
+
+    const formData = new FormData();
+    formData.append('file', selectedFile);
+
+    try {
+      const response = await fetch('http://localhost:8000/api/upload', {
+        method: 'POST',
+        body: formData,
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || 'Błąd podczas wgrywania pliku');
+      }
+
+      setUploadStatus('Plik dodany do bazy wiedzy!');
+      setSelectedFile(null);
+
+      setTimeout(() => setUploadStatus(''), 3000);
+    } catch (error: any) {
+      console.error('Błąd wgrywania:', error);
+      setUploadStatus(`Błąd: ${error.message}`);
+    } finally {
+      setIsUploading(false);
+    }
+  };
+
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
     if (!prompt.trim()) return;
 
     const userMessage: Message = { text: prompt, sender: 'user' };
-    const emptyBotMessage: Message = { text: '', sender: 'bot' };
+    const emptyAssistantMessage: Message = { text: '', sender: 'assistant' };
 
-    setMessages((prev) =>[...prev, userMessage, emptyBotMessage]);
+    setMessages((prev) => [...prev, userMessage, emptyAssistantMessage]);
     setPrompt('');
     setIsLoading(true);
 
@@ -92,10 +134,16 @@ function App() {
       }
     } catch (error) {
       console.error('Błąd:', error);
-      setMessages((prev) =>[
-        ...prev,
-        { text: 'Wystąpił błąd podczas komunikacji z serwerem.', sender: 'bot' },
-      ]);
+      setMessages((prev) => {
+        const updatedMessages = [...prev];
+        const lastIndex = updatedMessages.length - 1;
+
+        updatedMessages[lastIndex] = {
+          text: 'Wystąpił błąd podczas komunikacji z serwerem.',
+          sender: 'assistant'
+        };
+        return updatedMessages;
+      });
     } finally {
       setIsLoading(false);
     }
@@ -103,6 +151,23 @@ function App() {
 
   return (
       <div className="chat-container">
+        {/* SEKCJA UPLOADU DOKUMENTÓW DO RAG */}
+        <div className="upload-section">
+          <input
+              type="file"
+              accept=".txt,.pdf"
+              onChange={handleFileChange}
+              disabled={isUploading}
+          />
+          <button
+              onClick={handleFileUpload}
+              disabled={!selectedFile || isUploading}
+          >
+            {isUploading ? 'Ładowanie...' : 'Dodaj dokument'}
+          </button>
+          {uploadStatus && <span className="upload-status" title={uploadStatus}>{uploadStatus}</span>}
+        </div>
+
         <div className="chat-box" ref={chatBoxRef}>
           {messages.map((message, index) => (
               <div key={index} className={`message ${message.sender}`}>
@@ -110,15 +175,16 @@ function App() {
               </div>
           ))}
         </div>
+
         <form onSubmit={handleSubmit} className="chat-form">
           <input
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Wpisz swoje pytanie..."
+              placeholder="Wpisz swoje pytanie (asystent użyje wgranej wiedzy)..."
               disabled={isLoading}
           />
-          <button type="submit" disabled={isLoading}>
+          <button type="submit" disabled={isLoading || !prompt.trim()}>
             Wyślij
           </button>
         </form>
