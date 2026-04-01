@@ -54,6 +54,18 @@ body {
   cursor: not-allowed;
 }
 
+.upload-section button.reset-btn {
+  background-color: #dc3545;
+}
+
+.upload-section button.reset-btn:hover:not(:disabled) {
+  background-color: #c82333;
+}
+
+.upload-section button.reset-btn:disabled {
+  background-color: #e49199;
+}
+
 .upload-status {
   font-size: 12px;
   color: #555;

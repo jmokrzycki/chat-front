@@ -13,6 +13,7 @@ function App() {
 
   const [selectedFile, setSelectedFile] = useState<File | null>(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [isResetting, setIsResetting] = useState(false);
   const [uploadStatus, setUploadStatus] = useState<string>('');
 
   const chatBoxRef = useRef<HTMLDivElement>(null);
@@ -59,6 +60,34 @@ function App() {
       setUploadStatus(`Błąd: ${error.message}`);
     } finally {
       setIsUploading(false);
+    }
+  };
+
+  const handleReset = async () => {
+    if (!window.confirm('Czy na pewno chcesz usunąć całą wiedzę z bazy RAG?')) {
+      return;
+    }
+
+    setIsResetting(true);
+    setUploadStatus('Czyszczenie bazy...');
+
+    try {
+      const response = await fetch('http://localhost:8000/api/reset', {
+        method: 'POST',
+      });
+
+      if (!response.ok) {
+        const errData = await response.json();
+        throw new Error(errData.detail || 'Błąd podczas czyszczenia bazy');
+      }
+
+      setUploadStatus('Baza wiedzy została wyczyszczona!');
+      setTimeout(() => setUploadStatus(''), 3000);
+    } catch (error: any) {
+      console.error('Błąd czyszczenia:', error);
+      setUploadStatus(`Błąd: ${error.message}`);
+    } finally {
+      setIsResetting(false);
     }
   };
 
@@ -151,20 +180,28 @@ function App() {
 
   return (
       <div className="chat-container">
-        {/* SEKCJA UPLOADU DOKUMENTÓW DO RAG */}
         <div className="upload-section">
           <input
               type="file"
               accept=".txt,.pdf"
               onChange={handleFileChange}
-              disabled={isUploading}
+              disabled={isUploading || isResetting}
           />
           <button
               onClick={handleFileUpload}
-              disabled={!selectedFile || isUploading}
+              disabled={!selectedFile || isUploading || isResetting}
           >
             {isUploading ? 'Ładowanie...' : 'Dodaj dokument'}
           </button>
+
+          <button
+              className="reset-btn"
+              onClick={handleReset}
+              disabled={isUploading || isResetting || isLoading}
+          >
+            {isResetting ? 'Usuwanie...' : 'Resetuj RAG'}
+          </button>
+
           {uploadStatus && <span className="upload-status" title={uploadStatus}>{uploadStatus}</span>}
         </div>
 
@@ -181,7 +218,6 @@ function App() {
               type="text"
               value={prompt}
               onChange={(e) => setPrompt(e.target.value)}
-              placeholder="Wpisz swoje pytanie (asystent użyje wgranej wiedzy)..."
               disabled={isLoading}
           />
           <button type="submit" disabled={isLoading || !prompt.trim()}>
