@@ -1,4 +1,4 @@
-export interface Message { // <-- DODAJ SŁOWO KLUCZOWE "export"
+export interface Message {
     text: string;
     sender: 'user' | 'assistant';
 }

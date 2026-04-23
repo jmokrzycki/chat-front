@@ -1,25 +1,23 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { ChatArea } from './components/Chat/ChatArea';
 import { api } from './services/api';
 import type { Message } from './types';
 import './App.css';
 
-const DEFAULT_TEMPLATE = `Jesteś inteligentnym i pomocnym asystentem AI.
-Został Ci dostarczony poniższy KONTEKST w postaci fragmentów dokumentów.
-Odpowiedz na pytanie bazując na tym kontekście.
-Jeśli nie potrafisz znaleźć odpowiedzi w kontekście, powiedz o tym, a następnie odpowiedz zgodnie z własną wiedzą.
-
-KONTEKST:
-{context}
-
-PYTANIE UŻYTKOWNIKA:
-{question}`;
-
 function App() {
-  const [template, setTemplate] = useState(DEFAULT_TEMPLATE);
+  const [template, setTemplate] = useState('Ładowanie szablonu...');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  useEffect(() => {
+    api.getTemplate()
+        .then((data) => setTemplate(data.template))
+        .catch((err) => {
+          console.error('Nie udało się pobrać szablonu:', err);
+          setTemplate('Wystąpił błąd pobierania szablonu.');
+        });
+  }, []);
 
   const handleSendMessage = async (prompt: string) => {
     setMessages((prev) => [...prev, { text: prompt, sender: 'user' }, { text: '', sender: 'assistant' }]);
@@ -41,12 +39,13 @@ function App() {
 
         let newTextChunk = '';
         for (const line of lines) {
-          if (line.trim() !== '') {
+          const trimmedLine = line.trim();
+          if (trimmedLine !== '') {
             try {
-              const parsed = JSON.parse(line);
+              const parsed = JSON.parse(trimmedLine);
               if (parsed.response) newTextChunk += parsed.response;
             } catch (err) {
-              console.warn('Otrzymano nieprawidłowy fragment JSON ze strumienia:', line, err);
+              console.error('Niepoprawny format danych z serwera:', trimmedLine, err);
             }
           }
         }

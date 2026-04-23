@@ -130,3 +130,18 @@
         min-height: 100px;
     }
 }
+
+.save-btn {
+    background-color: #007bff;
+    color: white;
+    width: 100%;
+}
+
+.save-btn:hover:not(:disabled) {
+    background-color: #0056b3;
+}
+
+.save-btn:disabled {
+    background-color: #a0c8f0;
+    cursor: not-allowed;
+}

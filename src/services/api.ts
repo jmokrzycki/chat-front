@@ -21,6 +21,25 @@ export const api = {
         return res.json();
     },
 
+    getTemplate: async () => {
+        const res = await fetch(`${API_BASE}/template`);
+        if (!res.ok) throw new Error('Błąd pobierania szablonu');
+        return res.json();
+    },
+
+    saveTemplate: async (template: string) => {
+        const res = await fetch(`${API_BASE}/template`, {
+            method: 'POST',
+            headers: { 'Content-Type': 'application/json' },
+            body: JSON.stringify({ template }),
+        });
+        if (!res.ok) {
+            const err = await res.json();
+            throw new Error(err.detail || 'Błąd zapisu szablonu');
+        }
+        return res.json();
+    },
+
     chatStream: async (prompt: string, template: string) => {
         const res = await fetch(`${API_BASE}/chat`, {
             method: 'POST',

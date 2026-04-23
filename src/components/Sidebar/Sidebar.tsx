@@ -12,6 +12,7 @@ export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) 
     const [selectedFile, setSelectedFile] = useState<File | null>(null);
     const [isUploading, setIsUploading] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
+    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
 
     const showStatus = (msg: string) => {
@@ -50,7 +51,21 @@ export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) 
         }
     };
 
-    const isBusy = isUploading || isResetting || isChatLoading;
+    const handleSaveTemplate = async () => {
+        setIsSavingTemplate(true);
+        setStatusMsg('Zapisywanie...');
+        try {
+            await api.saveTemplate(template);
+            showStatus('Szablon został zapisany!');
+        } catch (err) {
+            const errorMessage = err instanceof Error ? err.message : String(err);
+            showStatus(`Błąd: ${errorMessage}`);
+        } finally {
+            setIsSavingTemplate(false);
+        }
+    };
+
+    const isBusy = isUploading || isResetting || isChatLoading || isSavingTemplate;
 
     return (
         <aside className="sidebar">
@@ -80,8 +95,17 @@ export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) 
                     className="template-textarea"
                     value={template}
                     onChange={(e) => setTemplate(e.target.value)}
+                    disabled={isSavingTemplate}
                     placeholder="Wpisz systemowy prompt..."
                 />
+                <button
+                    className="save-btn"
+                    onClick={handleSaveTemplate}
+                    disabled={isSavingTemplate || template.trim() === ''}
+                    style={{ marginTop: '10px' }}
+                >
+                    {isSavingTemplate ? 'Zapisywanie...' : 'Zapisz prompt'}
+                </button>
             </div>
         </aside>
     );
