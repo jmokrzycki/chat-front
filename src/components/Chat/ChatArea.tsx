@@ -6,9 +6,10 @@ interface ChatAreaProps {
     messages: Message[];
     isLoading: boolean;
     onSendMessage: (prompt: string) => void;
+    onStopMessage: () => void;
 }
 
-export function ChatArea({ messages, isLoading, onSendMessage }: ChatAreaProps) {
+export function ChatArea({ messages, isLoading, onSendMessage, onStopMessage }: ChatAreaProps) {
     const [prompt, setPrompt] = React.useState('');
     const chatBoxRef = useRef<HTMLDivElement>(null);
 
@@ -20,7 +21,7 @@ export function ChatArea({ messages, isLoading, onSendMessage }: ChatAreaProps) 
 
     const handleSubmit = (e: React.FormEvent) => {
         e.preventDefault();
-        if (!prompt.trim()) return;
+        if (!prompt.trim() || isLoading) return;
         onSendMessage(prompt);
         setPrompt('');
     };
@@ -36,7 +37,10 @@ export function ChatArea({ messages, isLoading, onSendMessage }: ChatAreaProps) 
                 )}
                 {messages.map((msg, idx) => (
                     <div key={idx} className={`message ${msg.sender}`}>
-                        <p>{msg.text || (isLoading && idx === messages.length - 1 ? '...' : '')}</p>
+                        <p>
+                            {msg.text}
+                            {isLoading && idx === messages.length - 1 && <span className="blinking-cursor">▋</span>}
+                        </p>
                     </div>
                 ))}
             </div>
@@ -49,9 +53,16 @@ export function ChatArea({ messages, isLoading, onSendMessage }: ChatAreaProps) 
                     disabled={isLoading}
                     placeholder="Zadaj pytanie na podstawie dokumentów..."
                 />
-                <button type="submit" disabled={isLoading || !prompt.trim()}>
-                    Wyślij
-                </button>
+
+                {isLoading ? (
+                    <button type="button" onClick={onStopMessage} className="stop-btn">
+                        ■ Stop
+                    </button>
+                ) : (
+                    <button type="submit" disabled={!prompt.trim()}>
+                        Wyślij
+                    </button>
+                )}
             </form>
         </main>
     );

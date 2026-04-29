@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { Sidebar } from './components/Sidebar/Sidebar';
 import { ChatArea } from './components/Chat/ChatArea';
 import { api } from './services/api';
@@ -9,6 +9,8 @@ function App() {
   const [template, setTemplate] = useState('Ładowanie szablonu...');
   const [messages, setMessages] = useState<Message[]>([]);
   const [isLoading, setIsLoading] = useState(false);
+
+  const abortControllerRef = useRef<AbortController | null>(null);
 
   useEffect(() => {
     api.getTemplate()
@@ -23,8 +25,10 @@ function App() {
     setMessages((prev) => [...prev, { text: prompt, sender: 'user' }, { text: '', sender: 'assistant' }]);
     setIsLoading(true);
 
+    abortControllerRef.current = new AbortController();
+
     try {
-      const res = await api.chatStream(prompt, template);
+      const res = await api.chatStream(prompt, template, abortControllerRef.current.signal);
       const reader = res.body!.getReader();
       const decoder = new TextDecoder('utf-8');
       let buffer = '';
@@ -54,28 +58,37 @@ function App() {
           setMessages((prev) => {
             const updated = [...prev];
             const lastIndex = updated.length - 1;
-
             updated[lastIndex] = {
               ...updated[lastIndex],
               text: updated[lastIndex].text + newTextChunk
             };
-
             return updated;
           });
         }
       }
-    } catch {
-      setMessages((prev) => {
-        const updated = [...prev];
-        const lastIndex = updated.length - 1;
-        updated[lastIndex] = {
-          ...updated[lastIndex],
-          text: 'Wystąpił błąd podczas komunikacji z serwerem.'
-        };
-        return updated;
-      });
+    } catch (err: any) {
+      if (err.name === 'AbortError') {
+        console.log('Zatrzymano generowanie.');
+      } else {
+        setMessages((prev) => {
+          const updated = [...prev];
+          const lastIndex = updated.length - 1;
+          updated[lastIndex] = {
+            ...updated[lastIndex],
+            text: 'Wystąpił błąd podczas komunikacji z serwerem.'
+          };
+          return updated;
+        });
+      }
     } finally {
       setIsLoading(false);
+      abortControllerRef.current = null;
+    }
+  };
+
+  const handleStopGenerating = () => {
+    if (abortControllerRef.current) {
+      abortControllerRef.current.abort();
     }
   };
 
@@ -90,6 +103,7 @@ function App() {
             messages={messages}
             isLoading={isLoading}
             onSendMessage={handleSendMessage}
+            onStopMessage={handleStopGenerating}
         />
       </div>
   );

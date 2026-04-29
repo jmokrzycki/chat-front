@@ -60,7 +60,6 @@ export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) 
                 {statusMsg && <div className="status-message">{statusMsg}</div>}
             </div>
 
-            {/* Przekazujemy refreshTrigger */}
             <DocumentManager
                 onStatusChange={showStatus}
                 isBusy={isDocManagerBusy || isResetting}

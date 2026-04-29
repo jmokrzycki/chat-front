@@ -159,7 +159,6 @@ export function DocumentManager({ onStatusChange, isBusy, setBusy, refreshTrigge
     return (
         <div className="doc-manager">
             <div className="dm-panels-container">
-                {/* LEWY PANEL (STAGE) */}
                 <div className="dm-panel dm-left">
                     <div className="dm-header">
                         <span className="folder-icon">📂 Stage</span>
@@ -183,7 +182,6 @@ export function DocumentManager({ onStatusChange, isBusy, setBusy, refreshTrigge
                     </div>
                 </div>
 
-                {/* ŚRODKOWE STRZAŁKI */}
                 <div className="dm-arrows">
                     <button onClick={moveRight} disabled={selectedLeft.length === 0 || isBusy} title="Przenieś do obszaru roboczego">
                         <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
@@ -193,7 +191,6 @@ export function DocumentManager({ onStatusChange, isBusy, setBusy, refreshTrigge
                     </button>
                 </div>
 
-                {/* PRAWY PANEL (WORKSPACE) */}
                 <div className="dm-panel dm-right">
                     <div className="dm-header">
                         <span>Zarządzanie bazą wektorową</span>
@@ -203,7 +200,6 @@ export function DocumentManager({ onStatusChange, isBusy, setBusy, refreshTrigge
                             <div className="dm-empty">Brak dokumentów</div>
                         )}
 
-                        {/* WYTRENOWANE PLIKI (Teraz można je zaznaczać!) */}
                         {trainedFiles.map(file => (
                             <label key={`trained-${file}`} className="dm-file-item trained-item">
                                 <input
@@ -217,7 +213,6 @@ export function DocumentManager({ onStatusChange, isBusy, setBusy, refreshTrigge
                             </label>
                         ))}
 
-                        {/* OCZEKUJĄCE PLIKI */}
                         {queuedFiles.map(file => (
                             <label key={`queued-${file}`} className="dm-file-item">
                                 <input
@@ -234,7 +229,6 @@ export function DocumentManager({ onStatusChange, isBusy, setBusy, refreshTrigge
                 </div>
             </div>
 
-            {/* DOLNA SEKCJA (DRAG&DROP + AKCJE) */}
             <div className="dm-actions-row">
                 <div className="dm-left-actions">
                     <div
@@ -273,7 +267,6 @@ export function DocumentManager({ onStatusChange, isBusy, setBusy, refreshTrigge
                         Trenuj RAG ({queuedFiles.length} nowych)
                     </button>
 
-                    {/* NOWY PRZYCISK: Usuwanie z bazy RAG */}
                     {selectedTrained.length > 0 && (
                         <button className="dm-delete-trained-btn" onClick={handleDeleteTrained} disabled={isBusy}>
                             Zapomnij z bazy RAG ({selectedTrained.length})
