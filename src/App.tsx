@@ -53,7 +53,13 @@ function App() {
         if (newTextChunk) {
           setMessages((prev) => {
             const updated = [...prev];
-            updated[updated.length - 1].text += newTextChunk;
+            const lastIndex = updated.length - 1;
+
+            updated[lastIndex] = {
+              ...updated[lastIndex],
+              text: updated[lastIndex].text + newTextChunk
+            };
+
             return updated;
           });
         }
@@ -61,7 +67,11 @@ function App() {
     } catch {
       setMessages((prev) => {
         const updated = [...prev];
-        updated[updated.length - 1].text = 'Wystąpił błąd podczas komunikacji z serwerem.';
+        const lastIndex = updated.length - 1;
+        updated[lastIndex] = {
+          ...updated[lastIndex],
+          text: 'Wystąpił błąd podczas komunikacji z serwerem.'
+        };
         return updated;
       });
     } finally {

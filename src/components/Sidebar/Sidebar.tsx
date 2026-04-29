@@ -1,5 +1,6 @@
 import { useState } from 'react';
 import { api } from '../../services/api';
+import { DocumentManager } from './DocumentManager';
 import './Sidebar.css';
 
 interface SidebarProps {
@@ -9,40 +10,25 @@ interface SidebarProps {
 }
 
 export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) {
-    const [selectedFile, setSelectedFile] = useState<File | null>(null);
-    const [isUploading, setIsUploading] = useState(false);
     const [isResetting, setIsResetting] = useState(false);
     const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+    const [isDocManagerBusy, setIsDocManagerBusy] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
+    const [refreshTrigger, setRefreshTrigger] = useState(0);
 
     const showStatus = (msg: string) => {
         setStatusMsg(msg);
-        setTimeout(() => setStatusMsg(''), 3000);
-    };
-
-    const handleUpload = async () => {
-        if (!selectedFile) return;
-        setIsUploading(true);
-        setStatusMsg('Przetwarzanie pliku...');
-        try {
-            await api.uploadFile(selectedFile);
-            showStatus('Plik dodany do bazy wiedzy!');
-            setSelectedFile(null);
-        } catch (err) {
-            const errorMessage = err instanceof Error ? err.message : String(err);
-            showStatus(`Błąd: ${errorMessage}`);
-        } finally {
-            setIsUploading(false);
-        }
+        setTimeout(() => setStatusMsg(''), 4000);
     };
 
     const handleReset = async () => {
-        if (!window.confirm('Czy na pewno usunąć całą wiedzę?')) return;
+        if (!window.confirm('Czy na pewno usunąć całą wiedzę z wytrenowanej bazy wektorowej? (Pliki ze stage pozostaną)')) return;
         setIsResetting(true);
-        setStatusMsg('Czyszczenie bazy...');
+        showStatus('Czyszczenie bazy...');
         try {
             await api.resetDatabase();
             showStatus('Baza wyczyszczona!');
+            setRefreshTrigger(prev => prev + 1);
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             showStatus(`Błąd: ${errorMessage}`);
@@ -53,7 +39,7 @@ export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) 
 
     const handleSaveTemplate = async () => {
         setIsSavingTemplate(true);
-        setStatusMsg('Zapisywanie...');
+        showStatus('Zapisywanie...');
         try {
             await api.saveTemplate(template);
             showStatus('Szablon został zapisany!');
@@ -65,27 +51,27 @@ export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) 
         }
     };
 
-    const isBusy = isUploading || isResetting || isChatLoading || isSavingTemplate;
+    const isBusy = isResetting || isChatLoading || isSavingTemplate || isDocManagerBusy;
 
     return (
         <aside className="sidebar">
-            <h2>Ustawienia RAG</h2>
+            <div className="sidebar-header">
+                <h2>Baza Dokumentów i Ustawienia</h2>
+                {statusMsg && <div className="status-message">{statusMsg}</div>}
+            </div>
+
+            {/* Przekazujemy refreshTrigger */}
+            <DocumentManager
+                onStatusChange={showStatus}
+                isBusy={isDocManagerBusy || isResetting}
+                setBusy={setIsDocManagerBusy}
+                refreshTrigger={refreshTrigger}
+            />
 
             <div className="sidebar-section">
-                <label>Dodaj dokumenty (.pdf, .txt)</label>
-                <input
-                    type="file"
-                    accept=".txt,.pdf"
-                    onChange={(e) => setSelectedFile(e.target.files?.[0] || null)}
-                    disabled={isBusy}
-                />
-                <button className="upload-btn" onClick={handleUpload} disabled={!selectedFile || isBusy}>
-                    {isUploading ? 'Ładowanie...' : 'Dodaj dokument'}
-                </button>
                 <button className="reset-btn" onClick={handleReset} disabled={isBusy}>
-                    {isResetting ? 'Usuwanie...' : 'Wyczyść bazę wiedzy'}
+                    {isResetting ? 'Usuwanie bazy wektorowej...' : 'Wyczyść bazę wiedzy (RAG)'}
                 </button>
-                {statusMsg && <div className="status-message">{statusMsg}</div>}
             </div>
 
             <div className="sidebar-section prompt-section">
