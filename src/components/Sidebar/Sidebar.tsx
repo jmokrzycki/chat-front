@@ -1,17 +1,17 @@
 import { useState } from 'react';
-import { api } from '../../services/api';
+import { api, type Settings } from '../../services/api';
 import { DocumentManager } from './DocumentManager';
 import './Sidebar.css';
 
 interface SidebarProps {
-    template: string;
-    setTemplate: (val: string) => void;
+    settings: Settings;
+    setSettings: (settings: Settings) => void;
     isChatLoading: boolean;
 }
 
-export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) {
+export function Sidebar({ settings, setSettings, isChatLoading }: SidebarProps) {
     const [isResetting, setIsResetting] = useState(false);
-    const [isSavingTemplate, setIsSavingTemplate] = useState(false);
+    const [isSaving, setIsSaving] = useState(false);
     const [isDocManagerBusy, setIsDocManagerBusy] = useState(false);
     const [statusMsg, setStatusMsg] = useState('');
     const [refreshTrigger, setRefreshTrigger] = useState(0);
@@ -37,21 +37,21 @@ export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) 
         }
     };
 
-    const handleSaveTemplate = async () => {
-        setIsSavingTemplate(true);
-        showStatus('Zapisywanie...');
+    const handleSaveSettings = async () => {
+        setIsSaving(true);
+        showStatus('Zapisywanie ustawień...');
         try {
-            await api.saveTemplate(template);
-            showStatus('Szablon został zapisany!');
+            await api.saveSettings(settings);
+            showStatus('Ustawienia zostały zapisane!');
         } catch (err) {
             const errorMessage = err instanceof Error ? err.message : String(err);
             showStatus(`Błąd: ${errorMessage}`);
         } finally {
-            setIsSavingTemplate(false);
+            setIsSaving(false);
         }
     };
 
-    const isBusy = isResetting || isChatLoading || isSavingTemplate || isDocManagerBusy;
+    const isBusy = isResetting || isChatLoading || isSaving || isDocManagerBusy;
 
     return (
         <aside className="sidebar">
@@ -73,25 +73,68 @@ export function Sidebar({ template, setTemplate, isChatLoading }: SidebarProps) 
                 </button>
             </div>
 
-            <div className="sidebar-section prompt-section">
-                <label>Systemowy Prompt</label>
-                <p className="hint">Użyj <code>{'{context}'}</code> i <code>{'{question}'}</code></p>
-                <textarea
-                    className="template-textarea"
-                    value={template}
-                    onChange={(e) => setTemplate(e.target.value)}
-                    disabled={isSavingTemplate}
-                    placeholder="Wpisz systemowy prompt..."
-                />
-                <button
-                    className="save-btn"
-                    onClick={handleSaveTemplate}
-                    disabled={isSavingTemplate || template.trim() === ''}
-                    style={{ marginTop: '10px' }}
-                >
-                    {isSavingTemplate ? 'Zapisywanie...' : 'Zapisz prompt'}
-                </button>
+            <div className="settings-scroll-area">
+
+                <div className={`memory-group ${!settings.memory_enabled ? 'disabled-group' : ''}`}>
+                    <div className="memory-header">
+                        <input
+                            type="checkbox"
+                            id="memoryToggle"
+                            checked={settings.memory_enabled}
+                            onChange={(e) => setSettings({ ...settings, memory_enabled: e.target.checked })}
+                            disabled={isSaving}
+                        />
+                        <label htmlFor="memoryToggle">Pamięć historii czatu</label>
+                    </div>
+
+                    <div className="prompt-section">
+                        <label>Limit zapamiętanych wiadomości</label>
+                        <p className="hint">Ile ostatnich wiadomości brać pod uwagę przy dopytywaniu.</p>
+                        <input
+                            type="number"
+                            min="0"
+                            max="20"
+                            className="limit-input"
+                            value={settings.history_limit}
+                            onChange={(e) => setSettings({ ...settings, history_limit: parseInt(e.target.value) || 0 })}
+                            disabled={isSaving || !settings.memory_enabled}
+                        />
+                    </div>
+
+                    <div className="prompt-section">
+                        <label>Re-phrasing Prompt (Zrozumienie kontekstu)</label>
+                        <p className="hint">Użyj <code>{'{chat_history}'}</code> i <code>{'{question}'}</code></p>
+                        <textarea
+                            className="template-textarea rephrase-textarea"
+                            value={settings.rephrase_template}
+                            onChange={(e) => setSettings({ ...settings, rephrase_template: e.target.value })}
+                            disabled={isSaving || !settings.memory_enabled}
+                            placeholder="Wpisz prompt re-phrasingu..."
+                        />
+                    </div>
+                </div>
+
+                <div className="sidebar-section prompt-section">
+                    <label>Systemowy Prompt (Główna odpowiedź)</label>
+                    <p className="hint">Użyj <code>{'{context}'}</code>, <code>{'{question}'}</code> i <code>{'{chat_history}'}</code></p>
+                    <textarea
+                        className="template-textarea"
+                        value={settings.template}
+                        onChange={(e) => setSettings({ ...settings, template: e.target.value })}
+                        disabled={isSaving}
+                        placeholder="Wpisz systemowy prompt..."
+                    />
+                </div>
             </div>
+
+            <button
+                className="save-btn"
+                onClick={handleSaveSettings}
+                disabled={isSaving || settings.template.trim() === '' || settings.rephrase_template.trim() === ''}
+                style={{ marginTop: '15px' }}
+            >
+                {isSaving ? 'Zapisywanie...' : 'Zapisz Ustawienia'}
+            </button>
         </aside>
     );
 }

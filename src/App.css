@@ -17,7 +17,7 @@ body {
 .app-container {
   display: flex;
   width: 100%;
-  max-width: 1500px; /* ZWIĘKSZONO z 1200px na 1500px na potrzeby szerszego Sidebaru */
+  max-width: 1500px;
   height: 90vh;
   background-color: #fff;
   border-radius: 12px;

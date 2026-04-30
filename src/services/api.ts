@@ -1,4 +1,13 @@
+import type { Message } from "../types";
+
 const API_BASE = 'http://localhost:8000/api';
+
+export interface Settings {
+    template: string;
+    rephrase_template: string;
+    history_limit: number;
+    memory_enabled: boolean;
+}
 
 export const api = {
     getFiles: async () => {
@@ -60,30 +69,30 @@ export const api = {
         return res.json();
     },
 
-    getTemplate: async () => {
-        const res = await fetch(`${API_BASE}/template`);
-        if (!res.ok) throw new Error('Błąd pobierania szablonu');
+    getSettings: async (): Promise<Settings> => {
+        const res = await fetch(`${API_BASE}/settings`);
+        if (!res.ok) throw new Error('Błąd pobierania ustawień');
         return res.json();
     },
 
-    saveTemplate: async (template: string) => {
-        const res = await fetch(`${API_BASE}/template`, {
+    saveSettings: async (settings: Settings) => {
+        const res = await fetch(`${API_BASE}/settings`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ template }),
+            body: JSON.stringify(settings),
         });
         if (!res.ok) {
             const err = await res.json();
-            throw new Error(err.detail || 'Błąd zapisu szablonu');
+            throw new Error(err.detail || 'Błąd zapisu ustawień');
         }
         return res.json();
     },
 
-    chatStream: async (prompt: string, template: string, signal?: AbortSignal) => {
+    chatStream: async (prompt: string, template: string, rephrase_template: string, history: Message[], signal?: AbortSignal) => {
         const res = await fetch(`${API_BASE}/chat`, {
             method: 'POST',
             headers: { 'Content-Type': 'application/json' },
-            body: JSON.stringify({ prompt, template }),
+            body: JSON.stringify({ prompt, template, rephrase_template, history }),
             signal,
         });
         if (!res.ok || !res.body) {
