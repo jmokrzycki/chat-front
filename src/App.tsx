@@ -74,16 +74,23 @@ function App() {
           setMessages((prev) => {
             const updated = [...prev];
             const lastIndex = updated.length - 1;
+            let currentText = updated[lastIndex].text;
+
+            if (currentText.trim() === '') {
+              currentText = '';
+              newTextChunk = newTextChunk.trimStart();
+            }
+
             updated[lastIndex] = {
               ...updated[lastIndex],
-              text: updated[lastIndex].text + newTextChunk
+              text: currentText + newTextChunk
             };
             return updated;
           });
         }
       }
-    } catch (err: any) {
-      if (err.name === 'AbortError') {
+    } catch (err) {
+      if (err instanceof Error && err.name === 'AbortError') {
         console.log('Zatrzymano generowanie.');
       } else {
         setMessages((prev) => {
@@ -108,6 +115,13 @@ function App() {
     }
   };
 
+  const handleClearChat = () => {
+    if (messages.length === 0) return;
+    if (window.confirm('Czy na pewno chcesz rozpocząć nową rozmowę? Aktualna historia czatu zostanie usunięta.')) {
+      setMessages([]);
+    }
+  };
+
   return (
       <div className="app-container">
         <Sidebar
@@ -120,6 +134,7 @@ function App() {
             isLoading={isLoading}
             onSendMessage={handleSendMessage}
             onStopMessage={handleStopGenerating}
+            onClearChat={handleClearChat}
         />
       </div>
   );

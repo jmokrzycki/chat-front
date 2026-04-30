@@ -7,9 +7,10 @@ interface ChatAreaProps {
     isLoading: boolean;
     onSendMessage: (prompt: string) => void;
     onStopMessage: () => void;
+    onClearChat: () => void;
 }
 
-export function ChatArea({ messages, isLoading, onSendMessage, onStopMessage }: ChatAreaProps) {
+export function ChatArea({ messages, isLoading, onSendMessage, onStopMessage, onClearChat }: ChatAreaProps) {
     const [prompt, setPrompt] = React.useState('');
     const chatBoxRef = useRef<HTMLDivElement>(null);
 
@@ -17,9 +18,9 @@ export function ChatArea({ messages, isLoading, onSendMessage, onStopMessage }: 
         if (chatBoxRef.current) {
             chatBoxRef.current.scrollTop = chatBoxRef.current.scrollHeight;
         }
-    }, [messages]);
+    }, [messages.length]);
 
-    const handleSubmit = (e: React.FormEvent) => {
+    const handleSubmit = (e: React.SyntheticEvent<HTMLFormElement>) => {
         e.preventDefault();
         if (!prompt.trim() || isLoading) return;
         onSendMessage(prompt);
@@ -28,11 +29,23 @@ export function ChatArea({ messages, isLoading, onSendMessage, onStopMessage }: 
 
     return (
         <main className="chat-area">
+            <div className="chat-header">
+                <h2>Czat z asystentem</h2>
+                <button
+                    className="new-chat-btn"
+                    onClick={onClearChat}
+                    disabled={isLoading || messages.length === 0}
+                    title="Rozpocznij nową konwersację (usuwa historię z pamięci)"
+                >
+                    ➕ Nowa rozmowa
+                </button>
+            </div>
+
             <div className="chat-box" ref={chatBoxRef}>
                 {messages.length === 0 && (
                     <div className="empty-chat">
                         <h2>Witaj!</h2>
-                        <p>Dodaj dokumenty po lewej stronie, ustaw prompt i rozpocznij rozmowę z modelem.</p>
+                        <p>Dodaj dokumenty po lewej stronie, włącz pamięć czatu, ustaw prompt i rozpocznij rozmowę z modelem.</p>
                     </div>
                 )}
                 {messages.map((msg, idx) => (
@@ -50,7 +63,6 @@ export function ChatArea({ messages, isLoading, onSendMessage, onStopMessage }: 
                     type="text"
                     value={prompt}
                     onChange={(e) => setPrompt(e.target.value)}
-                    disabled={isLoading}
                     placeholder="Zadaj pytanie na podstawie dokumentów..."
                 />
 
