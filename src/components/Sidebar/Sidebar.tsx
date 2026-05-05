@@ -34,6 +34,86 @@ export function Sidebar({ settings, setSettings, isChatLoading }: SidebarProps) 
         }
     };
 
+    const handleResetPrompt = async () => {
+        if (!window.confirm("Czy na pewno chcesz przywrócić domyślny prompt systemowy?")) return;
+
+        setIsSaving(true);
+        showStatus('Przywracanie domyślnego promptu...');
+        try {
+            const defaultSettings = await api.getDefaultSettings();
+            const updatedSettings = { ...settings, template: defaultSettings.template };
+
+            setSettings(updatedSettings);
+            await api.saveSettings(updatedSettings);
+
+            showStatus('Przywrócono i zapisano domyślny prompt!');
+        } catch (err) {
+            showStatus(`Błąd przywracania: ${err instanceof Error ? err.message : String(err)}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleResetRephrasePrompt = async () => {
+        if (!window.confirm("Czy na pewno chcesz przywrócić domyślny prompt re-phrasingu?")) return;
+
+        setIsSaving(true);
+        showStatus('Przywracanie domyślnego promptu...');
+        try {
+            const defaultSettings = await api.getDefaultSettings();
+            const updatedSettings = { ...settings, rephrase_template: defaultSettings.rephrase_template };
+
+            setSettings(updatedSettings);
+            await api.saveSettings(updatedSettings);
+
+            showStatus('Przywrócono i zapisano domyślny prompt!');
+        } catch (err) {
+            showStatus(`Błąd przywracania: ${err instanceof Error ? err.message : String(err)}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleResetHistoryLimit = async () => {
+        if (!window.confirm("Czy na pewno chcesz przywrócić domyślny limit zapamiętanych wiadomości?")) return;
+
+        setIsSaving(true);
+        showStatus('Przywracanie domyślnego limitu...');
+        try {
+            const defaultSettings = await api.getDefaultSettings();
+            const updatedSettings = { ...settings, history_limit: defaultSettings.history_limit };
+
+            setSettings(updatedSettings);
+            await api.saveSettings(updatedSettings);
+
+            showStatus('Przywrócono i zapisano domyślny limit!');
+        } catch (err) {
+            showStatus(`Błąd przywracania: ${err instanceof Error ? err.message : String(err)}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
+    const handleResetMemoryToggle = async () => {
+        if (!window.confirm("Czy na pewno chcesz przywrócić domyślne ustawienie pamięci (włączona/wyłączona)?")) return;
+
+        setIsSaving(true);
+        showStatus('Przywracanie domyślnego ustawienia...');
+        try {
+            const defaultSettings = await api.getDefaultSettings();
+            const updatedSettings = { ...settings, memory_enabled: defaultSettings.memory_enabled };
+
+            setSettings(updatedSettings);
+            await api.saveSettings(updatedSettings);
+
+            showStatus('Przywrócono i zapisano ustawienie pamięci!');
+        } catch (err) {
+            showStatus(`Błąd przywracania: ${err instanceof Error ? err.message : String(err)}`);
+        } finally {
+            setIsSaving(false);
+        }
+    };
+
     const isBusy = isChatLoading || isSaving || isRagBusy;
 
     return (
@@ -54,11 +134,15 @@ export function Sidebar({ settings, setSettings, isChatLoading }: SidebarProps) 
                     settings={settings}
                     setSettings={setSettings}
                     disabled={isBusy}
+                    onResetRephrase={handleResetRephrasePrompt}
+                    onResetHistoryLimit={handleResetHistoryLimit}
+                    onResetMemoryToggle={handleResetMemoryToggle}
                 />
 
                 <SystemPrompt
                     template={settings.template}
                     onChange={(val) => setSettings({ ...settings, template: val })}
+                    onReset={handleResetPrompt}
                     disabled={isBusy}
                 />
             </div>

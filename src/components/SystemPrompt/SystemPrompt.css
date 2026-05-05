@@ -4,22 +4,23 @@
     gap: 10px;
 }
 
-.system-prompt-section label {
+.system-prompt-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.system-prompt-header label {
     font-weight: bold;
     font-size: 14px;
     color: #444;
+    margin: 0;
 }
 
 .system-prompt-section .hint {
     font-size: 12px;
     color: #666;
     margin: 0;
-}
-
-.system-prompt-section .hint code {
-    background-color: #eef;
-    padding: 2px 4px;
-    border-radius: 3px;
 }
 
 .system-prompt-section .template-textarea {

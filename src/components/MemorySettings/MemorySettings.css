@@ -15,10 +15,16 @@
 
 .memory-header {
     display: flex;
+    justify-content: space-between;
     align-items: center;
-    gap: 8px;
     padding-bottom: 10px;
     border-bottom: 1px solid #d2d6db;
+}
+
+.memory-header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
 }
 
 .memory-header label {
@@ -76,6 +82,16 @@
 .limit-input:disabled {
     background-color: #f4f4f4;
     cursor: not-allowed;
+}
+
+.setting-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+}
+
+.setting-header label {
+    margin: 0;
 }
 
 .rephrase-textarea {

@@ -1,0 +1,20 @@
+.reset-inline-btn {
+    background: none;
+    border: none;
+    color: #007bff;
+    font-size: 12px;
+    cursor: pointer;
+    font-weight: 600;
+    padding: 2px 5px;
+    transition: color 0.2s;
+}
+
+.reset-inline-btn:hover:not(:disabled) {
+    text-decoration: underline;
+    color: #0056b3;
+}
+
+.reset-inline-btn:disabled {
+    color: #aaa;
+    cursor: not-allowed;
+}

@@ -75,6 +75,12 @@ export const api = {
         return res.json();
     },
 
+    getDefaultSettings: async (): Promise<Settings> => {
+        const res = await fetch(`${API_BASE}/settings/defaults`);
+        if (!res.ok) throw new Error('Błąd pobierania domyślnych ustawień');
+        return res.json();
+    },
+
     saveSettings: async (settings: Settings) => {
         const res = await fetch(`${API_BASE}/settings`, {
             method: 'POST',
