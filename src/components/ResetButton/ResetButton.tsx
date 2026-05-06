@@ -1,4 +1,5 @@
-import './ResetButton.css';
+import { Button } from '@mui/material';
+import ReplayIcon from '@mui/icons-material/Replay';
 
 interface ResetButtonProps {
     onClick: () => void;
@@ -8,14 +9,23 @@ interface ResetButtonProps {
 
 export function ResetButton({ onClick, disabled = false, title = "Resetuj do ustawień domyślnych" }: ResetButtonProps) {
     return (
-        <button
+        <Button
             type="button"
-            className="reset-inline-btn"
+            variant="text"
+            size="small"
+            startIcon={<ReplayIcon />}
             onClick={onClick}
             disabled={disabled}
             title={title}
+            sx={{
+                textTransform: 'none',
+                fontWeight: 600,
+                fontSize: '12px',
+                py: 0.2,
+                px: 1,
+            }}
         >
-            ⟲ Resetuj
-        </button>
+            Resetuj
+        </Button>
     );
 }

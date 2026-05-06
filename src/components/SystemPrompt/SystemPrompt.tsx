@@ -1,5 +1,5 @@
+import { Typography, TextField, Stack } from '@mui/material';
 import { ResetButton } from '../ResetButton/ResetButton';
-import './SystemPrompt.css';
 
 interface SystemPromptProps {
     template: string;
@@ -10,26 +10,39 @@ interface SystemPromptProps {
 
 export function SystemPrompt({ template, onChange, onReset, disabled }: SystemPromptProps) {
     return (
-        <div className="system-prompt-section">
-            <div className="system-prompt-header">
-                <label>Systemowy Prompt (Instrukcja główna)</label>
+        <Stack spacing={1}>
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                <Typography component="label" variant="body1" sx={{ fontWeight: 'bold' }}>
+                    Systemowy Prompt (Instrukcja główna)
+                </Typography>
                 <ResetButton
                     onClick={onReset}
                     disabled={disabled}
                     title="Przywróć domyślny, fabryczny prompt"
                 />
-            </div>
+            </Stack>
 
-            <p className="hint">
+            <Typography variant="body2" color="text.secondary">
                 Opisz rolę asystenta i zasady odpowiedzi. Historia i kontekst dodadzą się automatycznie w tle.
-            </p>
-            <textarea
-                className="template-textarea"
+            </Typography>
+
+            <TextField
+                multiline
+                minRows={6}
+                fullWidth
                 value={template}
                 onChange={(e) => onChange(e.target.value)}
                 disabled={disabled}
                 placeholder="Wpisz instrukcję systemową..."
+                sx={{
+                    '& .MuiInputBase-input': {
+                        fontFamily: 'monospace',
+                        fontSize: '13px',
+                        lineHeight: 1.5,
+                    },
+                    bgcolor: 'background.paper'
+                }}
             />
-        </div>
+        </Stack>
     );
 }

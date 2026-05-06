@@ -1,5 +1,23 @@
+import React from 'react';
+import {
+    Box,
+    Typography,
+    Paper,
+    Button,
+    IconButton,
+    List,
+    ListItem,
+    Checkbox,
+    FormControlLabel,
+    Chip,
+    Stack
+} from '@mui/material';
+import ArrowForwardIosIcon from '@mui/icons-material/ArrowForwardIos';
+import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
+import CloudUploadIcon from '@mui/icons-material/CloudUpload';
+import CheckCircleIcon from '@mui/icons-material/CheckCircle';
+import PendingIcon from '@mui/icons-material/Pending';
 import { useRagManager } from './useRagManager';
-import './RagManager.css';
 
 interface RagManagerProps {
     onStatusChange: (msg: string) => void;
@@ -7,96 +25,145 @@ interface RagManagerProps {
     setBusy: (state: boolean) => void;
 }
 
+interface FilePanelProps {
+    title: string;
+    files: string[];
+    selected: string[];
+    onSelect: (file: string) => void;
+    isBusy: boolean;
+    emptyText: string;
+    children?: (file: string) => React.ReactNode;
+}
+
+const FilePanel: React.FC<FilePanelProps> = ({ title, files, selected, onSelect, isBusy, emptyText, children }) => (
+    <Stack component={Paper} variant="outlined" sx={{ flex: 1, overflow: 'hidden', bgcolor: 'grey.50' }}>
+        <Box sx={{ p: 1.5, bgcolor: 'grey.100', borderBottom: 1, borderColor: 'divider' }}>
+            <Typography variant="subtitle2" sx={{ fontWeight: 600 }}>{title}</Typography>
+        </Box>
+        <Box sx={{ flex: 1, overflowY: 'auto', p: 1 }}>
+            {files.length === 0 ? (
+                <Stack sx={{ alignItems: 'center', justifyContent: 'center', height: '100%' }}>
+                    <Typography variant="body2" color="text.secondary">{emptyText}</Typography>
+                </Stack>
+            ) : (
+                <List dense disablePadding>
+                    {files.map((file: string) => (
+                        <ListItem key={file} disablePadding>
+                            <FormControlLabel
+                                sx={{ width: '100%', ml: 0, pr: 1.5 }}
+                                control={
+                                    <Checkbox
+                                        size="small"
+                                        checked={selected.includes(file)}
+                                        onChange={() => onSelect(file)}
+                                        disabled={isBusy}
+                                    />
+                                }
+                                label={children ? children(file) : <Typography variant="body2" noWrap>{file}</Typography>}
+                            />
+                        </ListItem>
+                    ))}
+                </List>
+            )}
+        </Box>
+    </Stack>
+);
+
 export function RagManager(props: RagManagerProps) {
     const {
-        trainedFiles,
-        queuedFiles,
-        setQueuedFiles,
-        selectedLeft,
-        setSelectedLeft,
-        selectedRight,
-        setSelectedRight,
-        selectedTrained,
-        setSelectedTrained,
-        fileInputRef,
-        availableStageFiles,
-        handleFileUpload,
-        handleDrop,
-        handleDeleteFromStage,
-        handleTrainRag,
-        handleDeleteTrained,
-        handleResetDatabase
+        trainedFiles, queuedFiles, setQueuedFiles,
+        selectedLeft, setSelectedLeft, selectedRight, setSelectedRight, selectedTrained, setSelectedTrained,
+        fileInputRef, availableStageFiles, handleFileUpload, handleDrop,
+        handleDeleteFromStage, handleTrainRag, handleDeleteTrained, handleResetDatabase
     } = useRagManager(props);
 
     const { isBusy } = props;
 
+    const toggleSelection = (setter: React.Dispatch<React.SetStateAction<string[]>>) => (file: string) => {
+        setter(p => p.includes(file) ? p.filter(f => f !== file) : [...p, file]);
+    };
+
+    const handleRightPanelSelect = (file: string) => {
+        if (trainedFiles.includes(file)) {
+            toggleSelection(setSelectedTrained)(file);
+        } else {
+            toggleSelection(setSelectedRight)(file);
+        }
+    };
+
     return (
-        <div className="rag-manager">
-            <div className="rm-panels-container">
-                <div className="rm-panel">
-                    <div className="rm-header">📂 Stage</div>
-                    <div className="rm-content">
-                        {availableStageFiles.length === 0 ? <div className="rm-empty">Brak plików</div> :
-                            availableStageFiles.map(file => (
-                                <label key={`left-${file}`} className="rm-file-item">
-                                    <input
-                                        type="checkbox"
-                                        checked={selectedLeft.includes(file)}
-                                        onChange={() => setSelectedLeft(p => p.includes(file) ? p.filter(f => f !== file) : [...p, file])}
-                                        disabled={isBusy}
-                                    />
-                                    <span>📄</span> {file}
-                                </label>
-                            ))}
-                    </div>
-                </div>
+        <Stack spacing={2} sx={{ mb: 2 }}>
+            <Stack direction="row" spacing={2} sx={{ alignItems: 'stretch', height: 300 }}>
+                <FilePanel
+                    title="📂 Stage"
+                    files={availableStageFiles}
+                    selected={selectedLeft}
+                    onSelect={toggleSelection(setSelectedLeft)}
+                    isBusy={isBusy}
+                    emptyText="Brak plików"
+                >
+                    {(file: string) => <Typography variant="body2" noWrap>📄 {file}</Typography>}
+                </FilePanel>
 
-                <div className="rm-arrows">
-                    <button onClick={() => { setQueuedFiles(p => [...p, ...selectedLeft]); setSelectedLeft([]); }} disabled={selectedLeft.length === 0 || isBusy}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M5 12h14M12 5l7 7-7 7"/></svg>
-                    </button>
-                    <button onClick={() => { setQueuedFiles(p => p.filter(f => !selectedRight.includes(f))); setSelectedRight([]); }} disabled={selectedRight.length === 0 || isBusy}>
-                        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2"><path d="M19 12H5M12 19l-7-7 7-7"/></svg>
-                    </button>
-                </div>
+                <Stack spacing={1} sx={{ justifyContent: 'center' }}>
+                    <IconButton
+                        onClick={() => { setQueuedFiles(p => [...p, ...selectedLeft]); setSelectedLeft([]); }}
+                        disabled={selectedLeft.length === 0 || isBusy}
+                    >
+                        <ArrowForwardIosIcon fontSize="small" />
+                    </IconButton>
+                    <IconButton
+                        onClick={() => { setQueuedFiles(p => p.filter(f => !selectedRight.includes(f))); setSelectedRight([]); }}
+                        disabled={selectedRight.length === 0 || isBusy}
+                    >
+                        <ArrowBackIosNewIcon fontSize="small" />
+                    </IconButton>
+                </Stack>
 
-                <div className="rm-panel">
-                    <div className="rm-header">Baza wektorowa</div>
-                    <div className="rm-content">
-                        {trainedFiles.length === 0 && queuedFiles.length === 0 && <div className="rm-empty">Brak dokumentów</div>}
-                        {trainedFiles.map(file => (
-                            <label key={`trained-${file}`} className="rm-file-item trained-item">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedTrained.includes(file)}
-                                    onChange={() => setSelectedTrained(p => p.includes(file) ? p.filter(f => f !== file) : [...p, file])}
-                                    disabled={isBusy}
-                                />
-                                <span>✅</span> {file} <span className="status-badge badge-trained">W bazie</span>
-                            </label>
-                        ))}
-                        {queuedFiles.map(file => (
-                            <label key={`queued-${file}`} className="rm-file-item">
-                                <input
-                                    type="checkbox"
-                                    checked={selectedRight.includes(file)}
-                                    onChange={() => setSelectedRight(p => p.includes(file) ? p.filter(f => f !== file) : [...p, file])}
-                                    disabled={isBusy}
-                                />
-                                <span>📄</span> {file} <span className="status-badge badge-pending">Oczekuje</span>
-                            </label>
-                        ))}
-                    </div>
-                </div>
-            </div>
+                <FilePanel
+                    title="🧠 Baza wektorowa"
+                    files={[...trainedFiles, ...queuedFiles]}
+                    selected={[...selectedTrained, ...selectedRight]}
+                    onSelect={handleRightPanelSelect}
+                    isBusy={isBusy}
+                    emptyText="Brak dokumentów"
+                >
+                    {(file: string) => (
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', width: '100%' }}>
+                            <Typography variant="body2" noWrap>
+                                {trainedFiles.includes(file) ? '✅' : '📄'} {file}
+                            </Typography>
+                            {trainedFiles.includes(file) ?
+                                <Chip label="W bazie" color="success" size="small" icon={<CheckCircleIcon />} sx={{ ml: 'auto', fontSize: '10px', height: '20px' }} /> :
+                                <Chip label="Oczekuje" color="warning" size="small" icon={<PendingIcon />} sx={{ ml: 'auto', fontSize: '10px', height: '20px' }} />
+                            }
+                        </Stack>
+                    )}
+                </FilePanel>
+            </Stack>
 
-            <div className="rm-actions-row">
-                <div className="rm-left-actions">
-                    <div
-                        className={`rm-dropzone ${isBusy ? 'disabled' : ''}`}
+            <Stack direction="row" spacing={2}>
+                <Stack spacing={1} sx={{ flex: 1 }}>
+                    <Paper
+                        variant="outlined"
                         onDragOver={e => e.preventDefault()}
                         onDrop={handleDrop}
                         onClick={() => !isBusy && fileInputRef.current?.click()}
+                        sx={{
+                            borderStyle: 'dashed',
+                            borderWidth: 2,
+                            borderColor: 'grey.400',
+                            p: 2,
+                            textAlign: 'center',
+                            cursor: isBusy ? 'not-allowed' : 'pointer',
+                            bgcolor: 'info.50',
+                            opacity: isBusy ? 0.6 : 1,
+                            transition: 'all 0.2s',
+                            '&:hover': {
+                                borderColor: isBusy ? 'grey.400' : 'primary.main',
+                                bgcolor: isBusy ? 'info.50' : 'info.100'
+                            }
+                        }}
                     >
                         <input
                             type="file"
@@ -106,28 +173,50 @@ export function RagManager(props: RagManagerProps) {
                             style={{ display: 'none' }}
                             onChange={(e) => e.target.files && handleFileUpload(e.target.files)}
                         />
-                        <svg className="rm-dropzone-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-                            <path d="M12 13v8" />
-                            <path d="M4 14.899A7 7 0 1 1 15.71 8h1.79a4.5 4.5 0 0 1 2.5 8.242" />
-                            <path d="m8 17 4-4 4 4" />
-                        </svg>
-                        <p className="rm-dropzone-title">Kliknij, aby przesłać lub przeciągnij i upuść</p>
-                        <p className="rm-dropzone-subtitle">obsługuje pliki PDF oraz TXT</p>
-                    </div>
-                    {selectedLeft.length > 0 && <button className="rm-delete-btn" onClick={handleDeleteFromStage} disabled={isBusy}>Usuń zaznaczone ze Stage</button>}
-                </div>
+                        <CloudUploadIcon color="action" sx={{ fontSize: 32, mb: 1 }} />
+                        <Typography sx={{ fontWeight: 500 }}>
+                            Kliknij, aby przesłać lub przeciągnij
+                        </Typography>
+                        <Typography variant="caption" color="text.secondary">
+                            Obsługuje PDF oraz TXT
+                        </Typography>
+                    </Paper>
 
-                <div className="rm-right-actions">
-                    <button className="rm-train-btn" onClick={handleTrainRag} disabled={queuedFiles.length === 0 || isBusy}>
+                    {selectedLeft.length > 0 && (
+                        <Button variant="outlined" color="error" onClick={handleDeleteFromStage} disabled={isBusy}>
+                            Usuń zaznaczone ze Stage
+                        </Button>
+                    )}
+                </Stack>
+
+                <Stack spacing={1} sx={{ flex: 1, justifyContent: 'flex-start' }}>
+                    <Button
+                        variant="contained"
+                        color="success"
+                        onClick={handleTrainRag}
+                        disabled={queuedFiles.length === 0 || isBusy}
+                        sx={{ py: 1.5, fontWeight: 'bold' }}
+                    >
                         Trenuj RAG ({queuedFiles.length})
-                    </button>
-                    {selectedTrained.length > 0 && <button className="rm-delete-trained-btn" onClick={handleDeleteTrained} disabled={isBusy}>Zapomnij zaznaczone ({selectedTrained.length})</button>}
-                </div>
-            </div>
+                    </Button>
 
-            <button className="reset-btn" onClick={handleResetDatabase} disabled={isBusy}>
+                    {selectedTrained.length > 0 && (
+                        <Button variant="outlined" color="error" onClick={handleDeleteTrained} disabled={isBusy}>
+                            Zapomnij zaznaczone ({selectedTrained.length})
+                        </Button>
+                    )}
+                </Stack>
+            </Stack>
+
+            <Button
+                variant="contained"
+                color="error"
+                onClick={handleResetDatabase}
+                disabled={isBusy}
+                sx={{ mt: 1, fontWeight: 'bold' }}
+            >
                 Wyczyść całą bazę wiedzy (RAG)
-            </button>
-        </div>
+            </Button>
+        </Stack>
     );
 }
