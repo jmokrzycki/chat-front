@@ -4,6 +4,7 @@ import { ResetButton } from '../ResetButton/ResetButton';
 
 interface MemorySettingsProps {
     settings: Settings;
+    defaultSettings: Settings | null;
     setSettings: (settings: Settings) => void;
     disabled: boolean;
     onResetRephrase: () => void;
@@ -13,6 +14,7 @@ interface MemorySettingsProps {
 
 export function MemorySettings({
                                    settings,
+                                   defaultSettings,
                                    setSettings,
                                    disabled,
                                    onResetRephrase,
@@ -32,7 +34,7 @@ export function MemorySettings({
             <Stack spacing={2}>
                 <Stack
                     direction="row"
-                    sx={{ justifyContent: 'space-between', alignItems: 'center', pb: 1, borderBottom: 1, borderColor: 'divider' }}
+                    sx={{ justifyContent: 'space-between', alignItems: 'center', pb: 1, borderBottom: 1, borderColor: 'divider', minHeight: '36px' }}
                 >
                     <FormControlLabel
                         control={
@@ -47,23 +49,27 @@ export function MemorySettings({
                             <Typography sx={{ fontWeight: 'bold' }}>Pamięć historii czatu</Typography>
                         }
                     />
-                    <ResetButton
-                        onClick={onResetMemoryToggle}
-                        disabled={disabled}
-                        title="Przywróć domyślne zachowanie pamięci"
-                    />
+                    {defaultSettings && settings.memory_enabled !== defaultSettings.memory_enabled && (
+                        <ResetButton
+                            onClick={onResetMemoryToggle}
+                            disabled={disabled}
+                            title="Przywróć domyślne zachowanie pamięci"
+                        />
+                    )}
                 </Stack>
 
                 <Stack spacing={0.5}>
-                    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', minHeight: '30px' }}>
                         <Typography component="label" variant="body1" sx={{ fontWeight: 'bold' }}>
                             Limit zapamiętanych wiadomości
                         </Typography>
-                        <ResetButton
-                            onClick={onResetHistoryLimit}
-                            disabled={disabled || !settings.memory_enabled}
-                            title="Przywróć domyślny limit historii"
-                        />
+                        {defaultSettings && settings.history_limit !== defaultSettings.history_limit && (
+                            <ResetButton
+                                onClick={onResetHistoryLimit}
+                                disabled={disabled || !settings.memory_enabled}
+                                title="Przywróć domyślny limit historii"
+                            />
+                        )}
                     </Stack>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
                         Ile ostatnich wiadomości brać pod uwagę przy dopytywaniu.
@@ -82,15 +88,17 @@ export function MemorySettings({
                 </Stack>
 
                 <Stack spacing={0.5}>
-                    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+                    <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', minHeight: '30px' }}>
                         <Typography component="label" variant="body1" sx={{ fontWeight: 'bold' }}>
                             Re-phrasing Prompt (Kontekst)
                         </Typography>
-                        <ResetButton
-                            onClick={onResetRephrase}
-                            disabled={disabled || !settings.memory_enabled}
-                            title="Przywróć domyślny prompt re-phrasingu"
-                        />
+                        {defaultSettings && settings.rephrase_template !== defaultSettings.rephrase_template && (
+                            <ResetButton
+                                onClick={onResetRephrase}
+                                disabled={disabled || !settings.memory_enabled}
+                                title="Przywróć domyślny prompt re-phrasingu"
+                            />
+                        )}
                     </Stack>
                     <Typography variant="body2" color="text.secondary" gutterBottom>
                         Instrukcja wyciągania kontekstu z historii dla RAG.

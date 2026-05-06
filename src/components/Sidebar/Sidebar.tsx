@@ -7,11 +7,12 @@ import { SystemPrompt } from './../SystemPrompt/SystemPrompt';
 
 interface SidebarProps {
     settings: Settings;
+    defaultSettings: Settings | null;
     setSettings: (settings: Settings) => void;
     isChatLoading: boolean;
 }
 
-export function Sidebar({ settings, setSettings, isChatLoading }: SidebarProps) {
+export function Sidebar({ settings, defaultSettings, setSettings, isChatLoading }: SidebarProps) {
     const [isSaving, setIsSaving] = useState(false);
     const [isRagBusy, setIsRagBusy] = useState(false);
 
@@ -43,12 +44,12 @@ export function Sidebar({ settings, setSettings, isChatLoading }: SidebarProps) 
     };
 
     const createResetHandler = (key: keyof Settings, successMsg: string) => async () => {
+        if (!defaultSettings) return;
         if (!window.confirm("Czy na pewno chcesz przywrócić domyślne ustawienie?")) return;
 
         setIsSaving(true);
         showStatus('Przywracanie ustawień...', 'info');
         try {
-            const defaultSettings = await api.getDefaultSettings();
             const updatedSettings = { ...settings, [key]: defaultSettings[key] };
             setSettings(updatedSettings);
             await api.saveSettings(updatedSettings);
@@ -94,6 +95,7 @@ export function Sidebar({ settings, setSettings, isChatLoading }: SidebarProps) 
                 <Stack spacing={3}>
                     <MemorySettings
                         settings={settings}
+                        defaultSettings={defaultSettings}
                         setSettings={setSettings}
                         disabled={isBusy}
                         onResetRephrase={handleResetRephrasePrompt}
@@ -102,6 +104,7 @@ export function Sidebar({ settings, setSettings, isChatLoading }: SidebarProps) 
                     />
                     <SystemPrompt
                         template={settings.template}
+                        defaultTemplate={defaultSettings?.template}
                         onChange={(val) => setSettings({ ...settings, template: val })}
                         onReset={handleResetPrompt}
                         disabled={isBusy}

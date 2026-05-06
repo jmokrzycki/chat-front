@@ -3,23 +3,26 @@ import { ResetButton } from '../ResetButton/ResetButton';
 
 interface SystemPromptProps {
     template: string;
+    defaultTemplate?: string;
     onChange: (val: string) => void;
     onReset: () => void;
     disabled: boolean;
 }
 
-export function SystemPrompt({ template, onChange, onReset, disabled }: SystemPromptProps) {
+export function SystemPrompt({ template, defaultTemplate, onChange, onReset, disabled }: SystemPromptProps) {
     return (
         <Stack spacing={1}>
-            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center' }}>
+            <Stack direction="row" sx={{ justifyContent: 'space-between', alignItems: 'center', minHeight: '30px' }}>
                 <Typography component="label" variant="body1" sx={{ fontWeight: 'bold' }}>
                     Systemowy Prompt (Instrukcja główna)
                 </Typography>
-                <ResetButton
-                    onClick={onReset}
-                    disabled={disabled}
-                    title="Przywróć domyślny, fabryczny prompt"
-                />
+                {defaultTemplate && template !== defaultTemplate && (
+                    <ResetButton
+                        onClick={onReset}
+                        disabled={disabled}
+                        title="Przywróć domyślny, fabryczny prompt"
+                    />
+                )}
             </Stack>
 
             <Typography variant="body2" color="text.secondary">

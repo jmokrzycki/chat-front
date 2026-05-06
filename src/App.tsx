@@ -27,12 +27,16 @@ function App() {
         history_limit: 4,
         memory_enabled: true,
     });
+    const [defaultSettings, setDefaultSettings] = useState<Settings | null>(null);
 
     const { messages, isLoading, sendMessage, stopGenerating, clearChat } = useChat(settings);
 
     useEffect(() => {
-        api.getSettings()
-            .then((data) => setSettings(data))
+        Promise.all([api.getSettings(), api.getDefaultSettings()])
+            .then(([current, defaults]) => {
+                setSettings(current);
+                setDefaultSettings(defaults);
+            })
             .catch((err) => console.error('Nie udało się pobrać ustawień:', err));
     }, []);
 
@@ -62,6 +66,7 @@ function App() {
                 >
                     <Sidebar
                         settings={settings}
+                        defaultSettings={defaultSettings}
                         setSettings={setSettings}
                         isChatLoading={isLoading}
                     />
