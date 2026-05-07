@@ -41,16 +41,20 @@ export function useRagManager({ onStatusChange, setBusy }: UseRagManagerProps) {
         setSelectedTrained([]);
     }, []);
 
-    // Pliki w Stage, które nie stoją w kolejce ORAZ nie są aktywnie trenowane w RAG
     const availableStageFiles = stageFiles.filter(f => !queuedFiles.includes(f) && !trainedFiles.includes(f));
 
     const handleFileUpload = async (files: FileList) => {
         setBusy(true);
         onStatusChange('Przesyłanie plików...');
         try {
+            const uploadedNames: string[] = [];
             for (let i = 0; i < files.length; i++) {
                 await api.uploadFile(files[i]);
+                uploadedNames.push(files[i].name);
             }
+
+            setQueuedFiles(prev => prev.filter(f => !uploadedNames.includes(f)));
+
             onStatusChange('Pliki przesłane na Stage.');
             await fetchData();
         } catch (err) {
