@@ -15,7 +15,7 @@ const apiClient = axios.create({
 });
 
 apiClient.interceptors.response.use(
-    (response) => response, // Jeśli zapytanie się udało (2xx), po prostu zwróć odpowiedź
+    (response) => response,
     (error) => {
         const message = error.response?.data?.detail || error.message || 'Wystąpił nieznany błąd serwera';
 
@@ -31,6 +31,11 @@ export const api = {
 
     getTrainedFiles: async () => {
         const res = await apiClient.get('/trained');
+        return res.data;
+    },
+
+    getCachedFiles: async () => {
+        const res = await apiClient.get('/cache');
         return res.data;
     },
 

@@ -12,6 +12,7 @@ import ArrowBackIosNewIcon from '@mui/icons-material/ArrowBackIosNew';
 import CloudUploadIcon from '@mui/icons-material/CloudUpload';
 import CheckCircleIcon from '@mui/icons-material/CheckCircle';
 import PendingIcon from '@mui/icons-material/Pending';
+import Inventory2OutlinedIcon from '@mui/icons-material/Inventory2Outlined';
 import { useRagManager } from './useRagManager';
 import { FilePanel } from './FilePanel';
 
@@ -23,7 +24,7 @@ interface RagManagerProps {
 
 export function RagManager(props: RagManagerProps) {
     const {
-        trainedFiles, queuedFiles, setQueuedFiles,
+        trainedFiles, cachedFiles, queuedFiles, setQueuedFiles,
         selectedLeft, setSelectedLeft, selectedRight, setSelectedRight, selectedTrained, setSelectedTrained,
         fileInputRef, availableStageFiles, handleFileUpload, handleDrop,
         handleDeleteFromStage, handleTrainRag, handleDeleteTrained, handleResetDatabase
@@ -54,7 +55,25 @@ export function RagManager(props: RagManagerProps) {
                     isBusy={isBusy}
                     emptyText="Brak plików"
                 >
-                    {(file: string) => <Typography variant="body2" noWrap>📄 {file}</Typography>}
+                    {(file: string) => (
+                        <Stack direction="row" spacing={1} sx={{ alignItems: 'center', width: '100%' }}>
+                            <Typography variant="body2" noWrap>📄 {file}</Typography>
+                            {cachedFiles.includes(file) && (
+                                <Chip
+                                    label="W cache"
+                                    size="small"
+                                    icon={<Inventory2OutlinedIcon style={{ fontSize: '12px' }}/>}
+                                    sx={{
+                                        ml: 'auto',
+                                        fontSize: '10px',
+                                        height: '20px',
+                                        bgcolor: 'grey.200',
+                                        color: 'text.secondary'
+                                    }}
+                                />
+                            )}
+                        </Stack>
+                    )}
                 </FilePanel>
 
                 <Stack spacing={1} sx={{ justifyContent: 'center' }}>
@@ -167,7 +186,7 @@ export function RagManager(props: RagManagerProps) {
                 disabled={isBusy}
                 sx={{ mt: 1, fontWeight: 'bold' }}
             >
-                Wyczyść całą bazę wiedzy (RAG)
+                Wyczyść całą bazę wiedzy i jej Cache
             </Button>
         </Stack>
     );
