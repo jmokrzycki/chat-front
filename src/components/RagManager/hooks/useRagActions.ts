@@ -1,47 +1,26 @@
-import { useState, useEffect, useRef } from 'react';
-import { api } from '../../services/api';
+import { api } from '../../../services/api';
+import type { UseRagStateReturn } from './useRagState';
 
-interface UseRagManagerProps {
-    onStatusChange: (msg: string) => void;
-    isBusy: boolean;
-    setBusy: (state: boolean) => void;
-}
-
-export function useRagManager({ onStatusChange, setBusy }: UseRagManagerProps) {
-    const [stageFiles, setStageFiles] = useState<string[]>([]);
-    const [trainedFiles, setTrainedFiles] = useState<string[]>([]);
-    const [cachedFiles, setCachedFiles] = useState<string[]>([]);
-    const [queuedFiles, setQueuedFiles] = useState<string[]>([]);
-
-    const [selectedLeft, setSelectedLeft] = useState<string[]>([]);
-    const [selectedRight, setSelectedRight] = useState<string[]>([]);
-    const [selectedTrained, setSelectedTrained] = useState<string[]>([]);
-
-    const fileInputRef = useRef<HTMLInputElement>(null);
-
+export function useRagActions(
+    state: UseRagStateReturn,
+    onStatusChange: (msg: string) => void,
+    setBusy: (isBusy: boolean) => void,
+    fileInputRef: React.RefObject<HTMLInputElement | null>
+) {
     const fetchData = async () => {
         try {
             const stageRes = await api.getFiles();
-            setStageFiles(Array.isArray(stageRes.files) ? stageRes.files : []);
+            state.setStageFiles(Array.isArray(stageRes.files) ? stageRes.files : []);
 
             const trainedRes = await api.getTrainedFiles();
-            setTrainedFiles(Array.isArray(trainedRes.files) ? trainedRes.files : []);
+            state.setTrainedFiles(Array.isArray(trainedRes.files) ? trainedRes.files : []);
 
             const cacheRes = await api.getCachedFiles();
-            setCachedFiles(Array.isArray(cacheRes.files) ? cacheRes.files : []);
+            state.setCachedFiles(Array.isArray(cacheRes.files) ? cacheRes.files : []);
         } catch (err) {
             console.error("Błąd pobierania danych:", err);
         }
     };
-
-    useEffect(() => {
-        fetchData();
-        setSelectedLeft([]);
-        setSelectedRight([]);
-        setSelectedTrained([]);
-    }, []);
-
-    const availableStageFiles = stageFiles.filter(f => !queuedFiles.includes(f) && !trainedFiles.includes(f));
 
     const handleFileUpload = async (files: FileList) => {
         setBusy(true);
@@ -53,7 +32,7 @@ export function useRagManager({ onStatusChange, setBusy }: UseRagManagerProps) {
                 uploadedNames.push(files[i].name);
             }
 
-            setQueuedFiles(prev => prev.filter(f => !uploadedNames.includes(f)));
+            state.setQueuedFiles(prev => prev.filter(f => !uploadedNames.includes(f)));
 
             onStatusChange('Pliki przesłane na Stage.');
             await fetchData();
@@ -65,21 +44,14 @@ export function useRagManager({ onStatusChange, setBusy }: UseRagManagerProps) {
         }
     };
 
-    const handleDrop = (e: React.DragEvent) => {
-        e.preventDefault();
-        if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-            handleFileUpload(e.dataTransfer.files);
-        }
-    };
-
     const handleDeleteFromStage = async () => {
-        if (!selectedLeft.length || !window.confirm('Usunąć zaznaczone pliki ze stage i pamięci podręcznej?')) return;
+        if (!state.selectedLeft.length || !window.confirm('Usunąć zaznaczone pliki ze stage i pamięci podręcznej?')) return;
         setBusy(true);
         try {
-            for (const file of selectedLeft) {
+            for (const file of state.selectedLeft) {
                 await api.deleteFile(file);
             }
-            setSelectedLeft([]);
+            state.setSelectedLeft([]);
             onStatusChange('Usunięto pliki ze Stage i wyczyszczono ich cache.');
             await fetchData();
         } catch (err) {
@@ -90,14 +62,14 @@ export function useRagManager({ onStatusChange, setBusy }: UseRagManagerProps) {
     };
 
     const handleTrainRag = async () => {
-        if (!queuedFiles.length) return;
+        if (!state.queuedFiles.length) return;
         setBusy(true);
         onStatusChange('Przygotowywanie modelu RAG...');
         try {
-            await api.trainRag(queuedFiles);
+            await api.trainRag(state.queuedFiles);
             onStatusChange('Model RAG zaktualizowany!');
-            setQueuedFiles([]);
-            setSelectedRight([]);
+            state.setQueuedFiles([]);
+            state.setSelectedRight([]);
             await fetchData();
         } catch (err) {
             onStatusChange(`Błąd trenowania: ${err instanceof Error ? err.message : String(err)}`);
@@ -107,13 +79,13 @@ export function useRagManager({ onStatusChange, setBusy }: UseRagManagerProps) {
     };
 
     const handleDeleteTrained = async () => {
-        if (!selectedTrained.length || !window.confirm('Wyłączyć wybrane pliki z bazy? Zostaną zapamiętane w cache do szybkiego przywrócenia.')) return;
+        if (!state.selectedTrained.length || !window.confirm('Wyłączyć wybrane pliki z bazy? Zostaną zapamiętane w cache do szybkiego przywrócenia.')) return;
         setBusy(true);
         try {
-            for (const file of selectedTrained) {
+            for (const file of state.selectedTrained) {
                 await api.deleteTrainedFile(file);
             }
-            setSelectedTrained([]);
+            state.setSelectedTrained([]);
             onStatusChange('Model odłożył wybrane dokumenty do pamięci (Cache).');
             await fetchData();
         } catch (err) {
@@ -130,8 +102,8 @@ export function useRagManager({ onStatusChange, setBusy }: UseRagManagerProps) {
         try {
             await api.resetDatabase();
             onStatusChange('Baza wektorowa i cache wyczyszczone!');
-            setSelectedTrained([]);
-            setQueuedFiles([]);
+            state.setSelectedTrained([]);
+            state.setQueuedFiles([]);
             await fetchData();
         } catch (err) {
             onStatusChange(`Błąd: ${err instanceof Error ? err.message : String(err)}`);
@@ -141,20 +113,8 @@ export function useRagManager({ onStatusChange, setBusy }: UseRagManagerProps) {
     };
 
     return {
-        trainedFiles,
-        cachedFiles,
-        queuedFiles,
-        setQueuedFiles,
-        selectedLeft,
-        setSelectedLeft,
-        selectedRight,
-        setSelectedRight,
-        selectedTrained,
-        setSelectedTrained,
-        fileInputRef,
-        availableStageFiles,
+        fetchData,
         handleFileUpload,
-        handleDrop,
         handleDeleteFromStage,
         handleTrainRag,
         handleDeleteTrained,
