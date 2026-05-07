@@ -35,7 +35,7 @@ export function ChatInput({ isLoading, onSendMessage, onStopMessage }: ChatInput
             <TextField
                 fullWidth
                 variant="outlined"
-                placeholder="Zadaj pytanie na podstawie dokumentów..."
+                placeholder="Zadaj pytanie..."
                 value={prompt}
                 onChange={(e) => setPrompt(e.target.value)}
                 sx={{

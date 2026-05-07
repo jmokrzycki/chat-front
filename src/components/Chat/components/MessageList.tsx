@@ -31,10 +31,7 @@ export function MessageList({ messages, isLoading }: MessageListProps) {
             {messages.length === 0 && (
                 <Stack sx={{ alignItems: 'center', m: 'auto', textAlign: 'center', maxWidth: 400 }}>
                     <Typography variant="h5" gutterBottom>
-                        Witaj!
-                    </Typography>
-                    <Typography variant="body1" color="text.secondary">
-                        Dodaj dokumenty po lewej stronie, włącz pamięć czatu, ustaw prompt i rozpocznij rozmowę z modelem.
+                        W czym mogę Ci pomóc?
                     </Typography>
                 </Stack>
             )}

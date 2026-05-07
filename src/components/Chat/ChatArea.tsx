@@ -25,7 +25,7 @@ export function ChatArea({ messages, isLoading, onSendMessage, onStopMessage, on
                 }}
             >
                 <Typography variant="h6" sx={{ fontWeight: 600 }}>
-                    Czat z asystentem
+                    Asystent
                 </Typography>
                 <Button
                     variant="outlined"
